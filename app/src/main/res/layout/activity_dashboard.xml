@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DashboardActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Title CardView -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/dashboardCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardBackgroundColor="#2A6FB3"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/dash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="sans-serif-black"
+                android:padding="16dp"
+                android:text="Dashboard"
+                android:textColor="#FFFFFF"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Welcome Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/activityCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dashboardCard">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="24dp">
+
+                <!-- Welcome Text -->
+                <TextView
+                    android:id="@+id/welcomeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Selamat Datang Admin"
+                    android:textColor="#2A6FB3"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/tambahadmin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/welcomeText"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="#2A6FB3"
+                    android:elevation="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingLeft="24dp"
+                    android:paddingRight="24dp"
+                    android:text="Tambah Admin"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp" />
+            </RelativeLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Button Layout -->
+        <LinearLayout
+            android:id="@+id/menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="10dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/activityCard">
+
+            <!-- Reguler CardView -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/leguler"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="#4CAF50"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="15dp">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/baseline_access_time_24" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:paddingTop="8dp"
+                        android:text="Reguler"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Express CardView -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/express"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:cardBackgroundColor="#FF5252"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="15dp">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/baseline_flash_on_24" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:paddingTop="8dp"
+                        android:text="Express"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Divider Line -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_margin="15sp"
+            android:layout_marginTop="10dp"
+            android:background="#3C3D37"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/menu" />
+
+        <!-- Order List Title -->
+        <TextView
+            android:id="@+id/ordertext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="20dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="Order List"
+            android:textColor="#3C3D37"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/menu" />
+
+        <!-- Booking List RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/listpesanan"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="16dp"
+            android:padding="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ordertext" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.core.widget.NestedScrollView>

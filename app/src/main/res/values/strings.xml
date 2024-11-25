@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">laundryandra</string>
+
+    <string-array name="layanan_options">
+        <item>Reguler</item>
+        <item>Express</item>
+    </string-array>
+</resources>

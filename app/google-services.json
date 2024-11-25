@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "320825582855",
+    "project_id": "laundryandrasetyawan",
+    "storage_bucket": "laundryandrasetyawan.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:320825582855:android:84eaf6a8dc5dd375d211a2",
+        "android_client_info": {
+          "package_name": "com.andra.laundryandra"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_BCM3TYICvArkkMbwc6aYmZR4kzM6IFA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
