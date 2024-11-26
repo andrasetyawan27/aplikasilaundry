@@ -1,6 +1,6 @@
 package com.andra.laundryandra
 
-data class PesananModel(
+data class ProsessModel(
     var id: String = "",
     var namaPelanggan: String = "",
     var jumlah: Int = 0,
@@ -8,4 +8,3 @@ data class PesananModel(
     var Tanggal: String = "",
     var total: String = ""
 )
-

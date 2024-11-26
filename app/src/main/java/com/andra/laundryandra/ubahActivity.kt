@@ -1,158 +1,95 @@
 package com.andra.laundryandra
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
-import android.widget.*
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.andra.laundryandra.databinding.UbahActivityBinding
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.*
+
 
 class ubahActivity : AppCompatActivity() {
-
-    private lateinit var etNamaPelanggan: EditText
-    private lateinit var etJumlah: EditText
-    private lateinit var btnSimpanTransaksi: Button
-    private lateinit var layananText: TextView
-    private lateinit var hargaText: TextView
-    private lateinit var tanggalText: TextView
+    private lateinit var binding: UbahActivityBinding
     private lateinit var database: DatabaseReference
-    private lateinit var transaksiId: String
-
-    private val hargaPerKilo = 8000 // Harga per kilogram dalam rupiah (sesuaikan dengan kebutuhan)
+    private var pesananId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.ubah_activity) // Gunakan layout XML yang sudah ada
 
-        // Inisialisasi elemen tampilan dari XML
-        tanggalText = findViewById(R.id.tanggal)
-        layananText = findViewById(R.id.spinnerLayanan)
-        etNamaPelanggan = findViewById(R.id.etNamaPelanggan)
-        etJumlah = findViewById(R.id.etJumlah)
-        hargaText = findViewById(R.id.harga)
-        btnSimpanTransaksi = findViewById(R.id.btnSimpanTransaksi)
+        // Menggunakan ViewBinding
+        binding = UbahActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Inisialisasi Firebase
-        database = FirebaseDatabase.getInstance("https://laundryandrasetyawan-default-rtdb.asia-southeast1.firebasedatabase.app/")
-            .getReference("Order")
+        // Ambil id yang dikirim dari PesananAdapter
+        pesananId = intent.extras?.getString("EXTRA_ID")
 
-        // Mendapatkan ID transaksi yang akan diedit dari Intent (harus diberikan saat membuka activity ini)
-        transaksiId = intent.getStringExtra("transaksiId") ?: return // Pastikan transaksiId ada
-        Log.d("ubahActivity", "Received Transaksi ID: $transaksiId") // Debug log to check transaksiId
+        // Inisialisasi Firebase RTDB
+        database = FirebaseDatabase.getInstance("https://laundryandrasetyawan-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("Order")
 
-        // Load data transaksi yang ada untuk diubah
-        loadDataTransaksi()
+        if (pesananId != null) {
+            // Ambil data pesanan dari Firebase berdasarkan id
+            getPesananData(pesananId!!)
+        }
 
-        // Set tanggal saat ini
-        val currentDate = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
-        tanggalText.text = "Tanggal: $currentDate"
-        layananText.text = "Layanan: Reguler"
-
-        // TextWatcher untuk menghitung harga otomatis
-        etJumlah.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                calculateTotalHarga()
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        // Tombol Simpan
-        btnSimpanTransaksi.setOnClickListener {
-            simpanDataTransaksi(currentDate)
+        // Tombol simpan transaksi
+        binding.btnSimpanTransaksi.setOnClickListener {
+            saveTransaction()
         }
     }
 
-    private fun loadDataTransaksi() {
-        database.child(transaksiId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
-                Log.d("ubahActivity", "Data exists: ${snapshot.exists()}")
-                if (snapshot.exists()) {
-                    val transaksi = snapshot.getValue(Transaksi::class.java)
-                    transaksi?.let {
-                        // Tampilkan data transaksi yang ada
-                        etNamaPelanggan.setText(it.namaPelanggan)
-                        etJumlah.setText(it.jumlah.toString())
-                        hargaText.text = "Harga: ${it.total}"
-                    }
+    private fun getPesananData(id: String) {
+        // Mengambil data dari Firebase berdasarkan ID yang diteruskan
+        database.child(id).get().addOnSuccessListener { snapshot ->
+            // Memeriksa apakah data ada
+            if (snapshot.exists()) {
+                // Ambil data dari snapshot dan konversi ke model PesananModel
+                val pesanan = snapshot.getValue(PesananModel::class.java)
+
+                // Jika data ditemukan, tampilkan di UI
+                pesanan?.let {
+                    binding.etNamaPelanggan.setText(it.namaPelanggan)
+                    binding.etJumlah.setText(it.jumlah.toString())
+                    binding.spinnerLayanan.setSelection(getLayananIndex(it.layanan))
+                    binding.harga.text = "Harga: ${it.total}"
+                    binding.tanggal.text = "Tanggal: ${it.Tanggal}"
+                }
+            } else {
+                // Jika data tidak ditemukan
+                Toast.makeText(this, "Data pesanan tidak ditemukan", Toast.LENGTH_SHORT).show()
+            }
+        }.addOnFailureListener {
+            // Menangani kesalahan jika ada
+            Toast.makeText(this, "Gagal mengambil data", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    private fun getLayananIndex(layanan: String): Int {
+        val layananOptions = resources.getStringArray(R.array.layanan_options)
+        return layananOptions.indexOf(layanan)
+    }
+
+    private fun saveTransaction() {
+        val namaPelanggan = binding.etNamaPelanggan.text.toString()
+        val jumlah = binding.etJumlah.text.toString().toIntOrNull() ?: 0
+        val layanan = binding.spinnerLayanan.selectedItem.toString()
+        val total = binding.harga.text.toString().replace("Harga: ", "")
+        val tanggal = binding.tanggal.text.toString().replace("Tanggal: ", "")
+
+        // Validasi input
+        if (namaPelanggan.isNotEmpty() && jumlah > 0) {
+            val pesanan = PesananModel(pesananId ?: "", namaPelanggan, jumlah, layanan, tanggal, total)
+            // Update data pesanan di Firebase
+            database.child(pesananId!!).setValue(pesanan).addOnCompleteListener {
+                if (it.isSuccessful) {
+                    Toast.makeText(this, "Transaksi berhasil disimpan", Toast.LENGTH_SHORT).show()
+                    finish()  // Kembali ke activity sebelumnya
                 } else {
-                    Toast.makeText(this@ubahActivity, "Transaksi tidak ditemukan", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Gagal menyimpan transaksi", Toast.LENGTH_SHORT).show()
                 }
             }
-
-            override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
-                Toast.makeText(this@ubahActivity, "Gagal mengambil data", Toast.LENGTH_SHORT).show()
-            }
-        })
-    }
-
-    private fun calculateTotalHarga() {
-        val jumlah = etJumlah.text.toString().trim()
-        if (jumlah.isNotEmpty()) {
-            val jumlahInt = jumlah.toIntOrNull() ?: 0
-            val totalHarga = jumlahInt * hargaPerKilo
-            val formatRupiah = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
-            val jumlahFormat = formatRupiah.format(totalHarga) // Format dalam bentuk "Rp65.000,00"
-            hargaText.text = "Harga: $jumlahFormat"
         } else {
-            hargaText.text = "Harga: -"
-        }
-    }
-
-    private fun simpanDataTransaksi(tanggal: String) {
-        val namaPelanggan = etNamaPelanggan.text.toString().trim()
-        val jumlah = etJumlah.text.toString().trim()
-
-        if (namaPelanggan.isEmpty() || jumlah.isEmpty()) {
-            Toast.makeText(this, "Mohon lengkapi semua data", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val jumlahInt = try {
-            jumlah.toInt()
-        } catch (e: NumberFormatException) {
-            Toast.makeText(this, "Jumlah harus berupa angka", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val totalHarga = jumlahInt * hargaPerKilo
-        val formatRupiah = NumberFormat.getCurrencyInstance(Locale("in", "ID")).format(totalHarga)
-
-        // Buat data transaksi
-        val transaksi = mapOf(
-            "id" to transaksiId, // Gunakan transaksiId yang ada
-            "namaPelanggan" to namaPelanggan,
-            "jumlah" to jumlahInt,
-            "layanan" to "Reguler", // Gunakan "Reguler"
-            "total" to formatRupiah,
-            "Tanggal" to tanggal
-        )
-
-        // Update data transaksi ke Firebase
-        database.child(transaksiId).setValue(transaksi).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Toast.makeText(this, "Data berhasil diperbarui", Toast.LENGTH_SHORT).show()
-                etNamaPelanggan.setText("")
-                etJumlah.setText("")
-                hargaText.text = "Total Harga: -"
-            } else {
-                Toast.makeText(this, "Gagal memperbarui data", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(this, "Nama dan jumlah harus diisi", Toast.LENGTH_SHORT).show()
         }
     }
 }
-
-data class Transaksi(
-    val id: String = "",
-    val namaPelanggan: String = "",
-    val jumlah: Int = 0,
-    val layanan: String = "",
-    val total: String = "",
-    val Tanggal: String = ""
-)

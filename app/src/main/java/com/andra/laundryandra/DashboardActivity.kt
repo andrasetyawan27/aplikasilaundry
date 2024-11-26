@@ -32,7 +32,7 @@ class DashboardActivity : AppCompatActivity() {
 
         // Set up button click listeners
         Badmin.setOnClickListener {
-            val intent = Intent(this@DashboardActivity, MainActivity::class.java)
+            val intent = Intent(this@DashboardActivity, ProsesAdapter::class.java)
             startActivity(intent)
         }
 

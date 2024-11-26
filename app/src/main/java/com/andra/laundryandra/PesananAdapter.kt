@@ -2,6 +2,8 @@ package com.andra.laundryandra
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
+import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +12,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.FirebaseDatabase
 
 class PesananAdapter(
     private val pesananList: ArrayList<PesananModel>,
@@ -23,12 +25,17 @@ class PesananAdapter(
         val textJumlah: TextView = itemView.findViewById(R.id.textJumlah)
         val textTotal: TextView = itemView.findViewById(R.id.textTotal)
         val textTanggal: TextView = itemView.findViewById(R.id.textTanggal)
-        val buttonhapus: Button = itemView.findViewById(R.id.buttonHapus)
-        val buttonedit: Button = itemView.findViewById(R.id.buttonUbah)
-        val buttonselesai: Button = itemView.findViewById(R.id.buttonSelesai)
+        val buttonHapus: Button = itemView.findViewById(R.id.buttonHapus)
+        val buttonProses: Button = itemView.findViewById(R.id.buttonProses)
+        val buttonUbah: Button = itemView.findViewById(R.id.buttonUbah)
     }
 
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    // Firebase Database references
+    private val databaseReference =
+        FirebaseDatabase.getInstance("https://laundryandrasetyawan-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("Order")
+
+    private val selesaiReference =
+        FirebaseDatabase.getInstance("https://laundryandrasetyawan-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("Selesai")
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PesananViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.viewholder_pesanan, parent, false)
@@ -43,20 +50,25 @@ class PesananAdapter(
         holder.textTotal.text = "Total: ${currentPesanan.total}"
         holder.textTanggal.text = "Tanggal: ${currentPesanan.Tanggal}"
 
-        // Logging untuk debugging data
-        Log.d("BindViewHolder", "Binding Pesanan - ID: ${currentPesanan.id}, Nama: ${currentPesanan.namaPelanggan}")
+        // Tombol hapus
 
-        // Handle button actions
-        holder.buttonhapus.setOnClickListener {
-            onHapusClick(holder.itemView.context, currentPesanan.id, position)
+
+        // Tombol Ubah
+        holder.buttonUbah.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, ubahActivity::class.java)
+
+            val bundle = Bundle().apply {
+                putString("EXTRA_ID", currentPesanan.id ?: "")
+            }
+
+            intent.putExtras(bundle)
+            context.startActivity(intent)
         }
 
-        holder.buttonedit.setOnClickListener {
-            onEditClick(holder.itemView.context, currentPesanan)
-        }
-
-        holder.buttonselesai.setOnClickListener {
-            onCompleteClick(holder.itemView.context, currentPesanan)
+        // Event Klik
+        holder.itemView.setOnClickListener {
+            onItemClick(currentPesanan)
         }
     }
 
@@ -72,7 +84,7 @@ class PesananAdapter(
         builder.setMessage("Apakah Anda yakin ingin menghapus pesanan ini?")
             .setCancelable(false)
             .setPositiveButton("Ya") { _, _ ->
-                deleteOrderFromFirestore(context, id, position)
+                deleteOrderFromDatabase(context, id, position)
             }
             .setNegativeButton("Tidak") { dialog, _ ->
                 dialog.dismiss()
@@ -80,39 +92,54 @@ class PesananAdapter(
         builder.create().show()
     }
 
-    private fun deleteOrderFromFirestore(context: Context, id: String, position: Int) {
-        Log.d("FirestoreDelete", "Menghapus dokumen dengan ID: $id")
-        db.collection("pesanan")
-            .document(id)
-            .delete()
+    private fun deleteOrderFromDatabase(context: Context, id: String, position: Int) {
+        databaseReference.child(id)
+            .removeValue()
             .addOnSuccessListener {
                 pesananList.removeAt(position)
                 notifyItemRemoved(position)
                 Toast.makeText(context, "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
-                Log.e("FirestoreDelete", "Gagal menghapus dokumen: ", e)
+                Log.e("PesananAdapter", "Gagal menghapus data: ", e)
                 Toast.makeText(context, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun onEditClick(context: Context, pesanan: PesananModel) {
-        Log.d("PesananAdapter", "Mengedit pesanan dengan ID: ${pesanan.id}")
-        Toast.makeText(context, "Edit pesanan: ${pesanan.namaPelanggan}", Toast.LENGTH_SHORT).show()
-        // Tambahkan logika untuk edit pesanan
-    }
+    private fun onProsesClick(context: Context, id: String, position: Int) {
+        if (id.isEmpty()) {
+            Toast.makeText(context, "ID pesanan tidak valid", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-    private fun onCompleteClick(context: Context, pesanan: PesananModel) {
-        Log.d("PesananAdapter", "Menyelesaikan pesanan dengan ID: ${pesanan.id}")
-        db.collection("pesanan")
-            .document(pesanan.id)
-            .update("status", "selesai")
-            .addOnSuccessListener {
-                Toast.makeText(context, "Pesanan selesai", Toast.LENGTH_SHORT).show()
+        val orderReference = FirebaseDatabase.getInstance("https://laundryandrasetyawan-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("Order")
+        val selesaiReference = FirebaseDatabase.getInstance("https://laundryandrasetyawan-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("Selesai")
+
+        // Ambil data dari tabel Order
+        orderReference.child(id).get().addOnSuccessListener { snapshot ->
+            val pesanan = snapshot.getValue(PesananModel::class.java)
+            if (pesanan != null) {
+                selesaiReference.child(id).setValue(pesanan) // Tambahkan ke tabel Selesai
+                    .addOnSuccessListener {
+                        // Hapus dari tabel Order
+                        orderReference.child(id).removeValue().addOnSuccessListener {
+                            pesananList.removeAt(position)
+                            notifyItemRemoved(position)
+                            Toast.makeText(context, "Pesanan berhasil diproses", Toast.LENGTH_SHORT).show()
+                        }.addOnFailureListener { e ->
+                            Log.e("PesananAdapter", "Gagal menghapus data dari Order: ", e)
+                            Toast.makeText(context, "Gagal menghapus data dari Order: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }.addOnFailureListener { e ->
+                        Log.e("PesananAdapter", "Gagal menyalin data ke Selesai: ", e)
+                        Toast.makeText(context, "Gagal memproses pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            } else {
+                Toast.makeText(context, "Data pesanan tidak ditemukan", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { e ->
-                Log.e("PesananAdapter", "Gagal menyelesaikan pesanan: ", e)
-                Toast.makeText(context, "Gagal menyelesaikan pesanan", Toast.LENGTH_SHORT).show()
-            }
+        }.addOnFailureListener { e ->
+            Log.e("PesananAdapter", "Gagal membaca data dari Order: ", e)
+            Toast.makeText(context, "Gagal membaca data pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 }

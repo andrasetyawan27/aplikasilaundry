@@ -24,6 +24,10 @@
             android:name=".TransaksiRegulerActivity"
             android:exported="false" />
         <activity
+            android:name=".ubahActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
